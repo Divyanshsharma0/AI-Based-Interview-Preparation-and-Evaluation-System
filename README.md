@@ -161,11 +161,11 @@ This system provides an automated interview preparation and evaluation platform 
 | Metric | Target | Justification |
 |--------|--------|---------------|
 | API Response Time (average) | 200-400ms | Standard REST endpoint latency |
-| Interview Setup Time | <2 seconds | Initial session creation and UI rendering |
-| Question Generation Latency | 1.5-3 seconds | LLM inference time for contextual questions |
-| Speech-to-Text Conversion | 2-5 seconds | Browser-based speech API processing |
+| Interview Setup Time | NA | Initial session creation and UI rendering |
+| Question Generation Latency | - | LLM inference time for contextual questions |
+| Speech-to-Text Conversion | - | Browser-based speech API processing |
 | Response Evaluation Latency | 3-8 seconds | LLM-based semantic analysis of response |
-| Document Upload Processing | <5 seconds | File parsing and embedding generation |
+| Document Upload Processing | <20 SEC | File parsing and embedding generation |
 | Database Query Time | 50-150ms | SQLite query execution on typical session data |
 | UI Interaction Response | <100ms | Frontend state updates and re-renders |
 | Session Load Time | 1-2 seconds | Fetching historical session data and rendering |
