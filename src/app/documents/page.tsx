@@ -11,6 +11,9 @@ import {
   CheckCircleIcon,
   LightBulbIcon,
   QuestionMarkCircleIcon,
+  ClipboardDocumentListIcon,
+  HandThumbUpIcon,
+  DocumentMagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import NavigationPanel from "../components/NavigationPanel";
 import ReactMarkdown from "react-markdown";
@@ -373,6 +376,21 @@ export default function DocumentsPage() {
                 </select>
               </motion.div>
             )}
+
+            {mode === "resume" && uploadedFile && documentText && (
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={() => analyzeFile(documentText)}
+                disabled={isAnalyzing || isParsing}
+                className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isAnalyzing ? "Re-analyzing…" : "Re-run analysis with targets"}
+              </motion.button>
+            )}
           </motion.div>
 
           {/* Right Panel - Dynamic Content */}
@@ -404,6 +422,59 @@ export default function DocumentsPage() {
                     </motion.div>
                   ) : (
                     <>
+                      {isAnalyzing && (
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-900 flex items-center gap-2">
+                          <SparklesIcon className="h-5 w-5 shrink-0 animate-pulse" />
+                          Generating a detailed resume review (this may take a moment)…
+                        </div>
+                      )}
+
+                      {/* Overview */}
+                      {analysisData?.summary && (
+                        <motion.div
+                          variants={cardVariants}
+                          className="rounded-xl border border-gray-200 bg-white p-6"
+                        >
+                          <div className="mb-3 flex items-center gap-2">
+                            <SparklesIcon className="h-5 w-5 text-indigo-600" />
+                            <h3 className="font-semibold text-gray-900">
+                              Overview
+                            </h3>
+                          </div>
+                          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {analysisData.summary}
+                          </p>
+                        </motion.div>
+                      )}
+
+                      {/* Strengths */}
+                      {(analysisData?.strengths || []).length > 0 && (
+                        <motion.div
+                          variants={cardVariants}
+                          className="rounded-xl border border-gray-200 bg-white p-6"
+                        >
+                          <div className="mb-4 flex items-center gap-2">
+                            <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+                            <h3 className="font-semibold text-gray-900">
+                              Standout strengths
+                            </h3>
+                          </div>
+                          <ul className="space-y-4">
+                            {(analysisData.strengths as string[]).map((line: string, idx: number) => (
+                              <motion.li
+                                key={idx}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="text-sm text-gray-700 border-l-2 border-emerald-200 pl-4 leading-relaxed"
+                              >
+                                {line}
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      )}
+
                       {/* Extracted Skills */}
                       <motion.div
                         variants={cardVariants}
@@ -418,7 +489,7 @@ export default function DocumentsPage() {
                         <div className="flex flex-wrap gap-2">
                           {(analysisData?.skills || []).map((skill: string, idx: number) => (
                             <motion.span
-                              key={skill}
+                              key={`${skill}-${idx}`}
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: idx * 0.1 }}
@@ -430,8 +501,8 @@ export default function DocumentsPage() {
                         </div>
                       </motion.div>
 
-                      {/* Missing Skills */}
-                      {(role || company) && (
+                      {/* Gaps / missing skills */}
+                      {(analysisData?.missingSkills || []).length > 0 && (
                         <motion.div
                           variants={cardVariants}
                           className="rounded-xl border border-gray-200 bg-white p-6"
@@ -439,22 +510,51 @@ export default function DocumentsPage() {
                           <div className="mb-4 flex items-center gap-2">
                             <LightBulbIcon className="h-5 w-5 text-amber-600" />
                             <h3 className="font-semibold text-gray-900">
-                              Missing Skills
+                              Gaps &amp; role fit
                             </h3>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {(analysisData?.missingSkills || []).map((skill: string, idx: number) => (
-                              <motion.span
-                                key={skill}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800"
+                          <ul className="space-y-3">
+                            {(analysisData.missingSkills as string[]).map((line: string, idx: number) => (
+                              <motion.li
+                                key={idx}
+                                initial={{ opacity: 0, x: -6 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="text-sm text-gray-700 border border-amber-100 bg-amber-50/80 rounded-lg px-3 py-2 leading-relaxed"
                               >
-                                {skill}
-                              </motion.span>
+                                {line}
+                              </motion.li>
                             ))}
+                          </ul>
+                        </motion.div>
+                      )}
+
+                      {/* Formatting & ATS */}
+                      {(analysisData?.formattingAndAts || []).length > 0 && (
+                        <motion.div
+                          variants={cardVariants}
+                          className="rounded-xl border border-gray-200 bg-white p-6"
+                        >
+                          <div className="mb-4 flex items-center gap-2">
+                            <DocumentIcon className="h-5 w-5 text-slate-600" />
+                            <h3 className="font-semibold text-gray-900">
+                              Format &amp; ATS
+                            </h3>
                           </div>
+                          <ul className="space-y-2">
+                            {(analysisData.formattingAndAts as string[]).map((line: string, idx: number) => (
+                              <motion.li
+                                key={idx}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="text-sm text-gray-700 flex gap-2"
+                              >
+                                <span className="text-slate-400 flex-shrink-0">•</span>
+                                <span>{line}</span>
+                              </motion.li>
+                            ))}
+                          </ul>
                         </motion.div>
                       )}
 
